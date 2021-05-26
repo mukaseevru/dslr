@@ -33,8 +33,8 @@ def histogram(df):
         plt.title(feature)
         plt.legend()
     fig.tight_layout()
-    plt.savefig('plots/histogram.png')
-    print('You can see histograms here: plots/histogram.png')
+    plt.savefig('plots/histograms.png')
+    print('You can see histograms here: plots/histograms.png')
 
 
 def main():
