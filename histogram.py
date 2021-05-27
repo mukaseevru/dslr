@@ -20,8 +20,10 @@ def histogram(df):
         houses_dct[house] = temp.select_dtypes(include=['int64', 'float64']).dropna()
     fig, axes = plt.subplots(4, 4, figsize=(15, 10))
     fig.suptitle('Histograms')
-    for i, feature in enumerate(features):
-        plt.subplot(5, 3, i + 1)
+    i = 0
+    for feature in features:
+        i += 1
+        plt.subplot(5, 3, i)
         plt.hist(houses_dct['Slytherin'][feature], 50, density=True,
                  color='red', alpha=0.75, label='Slytherin')
         plt.hist(houses_dct['Gryffindor'][feature], 50, density=True,
@@ -31,7 +33,7 @@ def histogram(df):
         plt.hist(houses_dct['Hufflepuff'][feature], 50, density=True,
                  color='orange', alpha=0.75, label='Hufflepuff')
         plt.title(feature)
-        plt.legend()
+        plt.legend(loc='best')
     fig.tight_layout()
     plt.savefig('plots/histograms.png')
     print('You can see histograms here: plots/histograms.png')
