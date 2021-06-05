@@ -22,14 +22,15 @@ def std_scaler(df):
     return (df - df.mean()) / df.std()
 
 
-def predict(df, thetas):
+def predict(df, thetas, drop=True):
     if df is None or thetas is None:
         return None
     houses = ['Ravenclaw', 'Slytherin', 'Gryffindor', 'Hufflepuff']
-    thetas.drop(thetas.columns[0], axis=1, inplace=True)
-    df = df.iloc[:, 6:]
-    df = df.replace(np.nan, 0)
-    df = std_scaler(df)
+    if drop:
+        thetas.drop(thetas.columns[0], axis=1, inplace=True)
+        df.drop(df.columns[:6], axis=1, inplace=True)
+        df = df.replace(np.nan, 0)
+        df = std_scaler(df)
     result = {}
     for i, row in thetas.iterrows():
         sig = sigmoid(df.dot(row))
