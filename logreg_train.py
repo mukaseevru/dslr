@@ -20,19 +20,19 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
-def get_cost(data, theta, y):
-    data_len = len(data)
-    sig = sigmoid(np.dot(theta, data.T))
-    cost = (np.sum((y.T * np.log(sig)) + ((1 - y.T) * (np.log(1 - sig))))) / -data_len
-    derivative = (np.dot((sig - y.T), data)) / data_len
+def get_cost(df, theta, y):
+    df_len = len(df)
+    sig = sigmoid(np.dot(theta, df.T))
+    cost = (np.sum((y.T * np.log(sig)) + ((1 - y.T) * (np.log(1 - sig))))) / -df_len
+    derivative = (np.dot((sig - y.T), df)) / df_len
     return derivative, cost
 
 
-def gradient_descent(data, y, epochs, learning_rate):
+def gradient_descent(df, y, epochs, learning_rate):
     history = []
-    theta = np.zeros((1, data.shape[1]))
+    theta = np.zeros((1, df.shape[1]))
     for _ in range(epochs):
-        derivative, cost = get_cost(data, theta, y)
+        derivative, cost = get_cost(df, theta, y)
         theta -= learning_rate * derivative
         history.append(cost)
     return theta[0].tolist(), history
@@ -54,17 +54,17 @@ def train(df, epochs, learning_rate):
     history_dct = {}
     thetas = []
     houses_indexes = [houses[x] for x in df['Hogwarts House']]
-    data = df.iloc[:, 6:]
-    data = data.replace(np.nan, 0)
-    data = std_scaler(data)
+    df = df.iloc[:, 6:]
+    df = df.replace(np.nan, 0)
+    df = std_scaler(df)
     for i, val in enumerate(houses):
         y = []
         for house in houses_indexes:
             y.append(1 if house == i else 0)
-        theta, history = gradient_descent(data, np.asarray(y), epochs, learning_rate)
+        theta, history = gradient_descent(df, np.asarray(y), epochs, learning_rate)
         history_dct[val] = history
         thetas.append(theta)
-    thetas = pd.DataFrame(thetas, columns=data.columns, index=houses)
+    thetas = pd.DataFrame(thetas, columns=df.columns, index=houses)
     return thetas
 
 
