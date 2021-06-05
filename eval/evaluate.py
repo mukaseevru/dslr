@@ -27,8 +27,8 @@ if __name__ == '__main__':
         truths = load_csv("dataset_truth.csv")
     else:
         sys.exit("Error: missing dataset_truth.csv in the current directory.")
-    if os.path.isfile("houses.csv"):
-        predictions = load_csv("houses.csv")
+    if os.path.isfile("../data/houses.csv"):
+        predictions = load_csv("../data/houses.csv")
     else:
         sys.exit("Error: missing houses.csv in the current directory.")
     # Here we are comparing each values and counting each time
