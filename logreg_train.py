@@ -42,7 +42,7 @@ def std_scaler(df):
     return (df - df.mean()) / df.std()
 
 
-def train(df, epochs, learning_rate):
+def train(df, epochs=1000, learning_rate=0.1):
     if df is None:
         return None
     houses = {
@@ -54,7 +54,7 @@ def train(df, epochs, learning_rate):
     history_dct = {}
     thetas = []
     houses_indexes = [houses[x] for x in df['Hogwarts House']]
-    df = df.iloc[:, 6:]
+    df.drop(df.columns[:6], axis=1, inplace=True)
     df = df.replace(np.nan, 0)
     df = std_scaler(df)
     for i, val in enumerate(houses):
