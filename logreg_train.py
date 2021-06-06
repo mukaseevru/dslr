@@ -11,11 +11,10 @@ def parse_args():
     # parser.add_argument('-s', '--show', type=int, help='show plot', default=False)
     # parser.add_argument('-r', '--r_squared', type=int, help='show R2 metric', default=False)
     parser.add_argument('-l', '--learning_rate', type=float, help='set learning rate', default=0.1)
-    parser.add_argument('-e', '--epochs', type=float, help='set epoch number', default=1000)
-    parser.add_argument('-p', '--precision', type=float, help='set precision', default=0.00000001)
+    parser.add_argument('-e', '--epochs', type=float, help='set epoch number', default=10000)
+    parser.add_argument('-p', '--precision', type=float, help='set precision', default=0.000001)
     parser.add_argument('-m', '--method', type=str, help='set method', default='GD')
-    parser.add_argument('-s', '--seed', type=int, help='set seed for random', default=32)
-    parser.add_argument('-b', '--batch_size', type=int, help='set batch size', default=4)
+    parser.add_argument('-b', '--batch_size', type=int, help='set batch size', default=2)
     args = parser.parse_args()
     return args.__dict__
 
