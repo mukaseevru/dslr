@@ -32,22 +32,42 @@ def get_cost(df, theta, y):
     return derivative, cost
 
 
-def gradient_descent(df, y, epochs, learning_rate, precision, method, seed, batch_size):
-    if method != 'GD':
-        np.random.seed(seed)
+def get_mini_batches(df, y, batch_size):
+    mini_batches = []
+    n_mini_batches = df.shape[0] // batch_size
+    for i in range(n_mini_batches):
+        df_mini = df[i * batch_size : (i + 1) * batch_size ]
+        y_mini = y[i * batch_size : (i + 1) * batch_size ]
+        mini_batches.append((df_mini, y_mini))
+    if df.shape[0] % batch_size != 0:
+        i += 1
+        df_mini = df[i * batch_size : -1]
+        y_mini = y[i * batch_size : -1]
+        mini_batches.append((df_mini, y_mini))
+    return mini_batches
+
+
+def gradient_descent(df, y, epochs, learning_rate, precision, method, mini_batches):
     history = []
     theta = np.zeros((1, df.shape[1]))
     cost_prev = 0
     cost = 1
     i = 0
+    random_ind = 0
     while abs(cost - cost_prev) > precision and i < epochs:
         cost_prev = cost
         if method == 'SGD':
-            random_ind = np.random.randint(df.shape[0])
             derivative, cost = get_cost(df.iloc[[random_ind, ]], theta, y[random_ind])
+            if random_ind == df.shape[0] - 1:
+                random_ind = 0
+            else:
+                random_ind += 1
         elif method == 'MBGD':
-            batch = np.random.randint(0, df.shape[0], batch_size)
-            derivative, cost = get_cost(df.iloc[batch], theta, y[batch])
+            derivative, cost = get_cost(mini_batches[random_ind][0], theta, np.array(mini_batches[random_ind][1]))
+            if random_ind == len(mini_batches) - 1:
+                random_ind = 0
+            else:
+                random_ind += 1
         else:
             derivative, cost = get_cost(df, theta, y)
         theta -= learning_rate * derivative
@@ -64,7 +84,7 @@ def std_scaler(df):
     return (df - df.mean()) / df.std()
 
 
-def train(df, epochs, learning_rate, precision, method, seed, batch_size):
+def train(df, epochs, learning_rate, precision, method, batch_size):
     if df is None:
         return None
     houses = {
@@ -75,16 +95,21 @@ def train(df, epochs, learning_rate, precision, method, seed, batch_size):
     }
     history_dct = {}
     thetas = []
+    if method in ('SGD', 'MBGD'):
+        df = df.sample(frac=1, random_state=42).reset_index(drop=True)
     houses_indexes = [houses[x] for x in df['Hogwarts House']]
     df.drop(df.columns[:6], axis=1, inplace=True)
     df = df.replace(np.nan, 0)
     df = std_scaler(df)
+    mini_batches = None
     for i, val in enumerate(houses):
         print("Training the classifier for class k = {}...".format(val))
         y = []
         for house in houses_indexes:
             y.append(1 if house == i else 0)
-        theta, history = gradient_descent(df, np.asarray(y), epochs, learning_rate, precision, method, seed, batch_size)
+        if method == 'MBGD':
+            mini_batches = get_mini_batches(df, y, batch_size)
+        theta, history = gradient_descent(df, np.asarray(y), epochs, learning_rate, precision, method, mini_batches)
         history_dct[val] = history
         thetas.append(theta)
     thetas = pd.DataFrame(thetas, columns=df.columns, index=houses)
@@ -97,7 +122,7 @@ def main():
     if os.path.exists(args['input']):
         try:
             df = pd.read_csv(args['input'])
-            thetas = train(df, args['epochs'], args['learning_rate'], args['precision'], args['method'], args['seed'], args['batch_size'])
+            thetas = train(df, args['epochs'], args['learning_rate'], args['precision'], args['method'], args['batch_size'])
             if thetas is not None:
                 thetas.to_csv(args['output'])
         except OSError as e:
