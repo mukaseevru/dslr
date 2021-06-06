@@ -134,4 +134,4 @@ dmypy.json
 # Results
 plots
 data/houses.csv
-data/theta.csv
+data/thetas.csv

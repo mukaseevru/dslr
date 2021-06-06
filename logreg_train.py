@@ -14,6 +14,8 @@ def parse_args():
     parser.add_argument('-e', '--epochs', type=float, help='set epoch number', default=1000)
     parser.add_argument('-p', '--precision', type=float, help='set precision', default=0.00000001)
     parser.add_argument('-m', '--method', type=str, help='set method', default='GD')
+    parser.add_argument('-s', '--seed', type=int, help='set seed for random', default=32)
+    parser.add_argument('-b', '--batch_size', type=int, help='set batch size', default=4)
     args = parser.parse_args()
     return args.__dict__
 
@@ -30,7 +32,7 @@ def get_cost(df, theta, y):
     return derivative, cost
 
 
-def gradient_descent(df, y, epochs, learning_rate, precision, method='GD', seed=42, batch_size=50):
+def gradient_descent(df, y, epochs, learning_rate, precision, method, seed, batch_size):
     if method != 'GD':
         np.random.seed(seed)
     history = []
@@ -43,7 +45,7 @@ def gradient_descent(df, y, epochs, learning_rate, precision, method='GD', seed=
         if method == 'SGD':
             random_ind = np.random.randint(df.shape[0])
             derivative, cost = get_cost(df.iloc[[random_ind, ]], theta, y[random_ind])
-        if method == 'MBGD':
+        elif method == 'MBGD':
             batch = np.random.randint(0, df.shape[0], batch_size)
             derivative, cost = get_cost(df.iloc[batch], theta, y[batch])
         else:
@@ -51,7 +53,7 @@ def gradient_descent(df, y, epochs, learning_rate, precision, method='GD', seed=
         theta -= learning_rate * derivative
         history.append(cost)
         i += 1
-    if abs(cost - cost_prev)> precision:
+    if abs(cost - cost_prev) > precision:
            print('Error: Calculation stopped, maximum number of epochs exceeded.')
     else:           
         print('epochs = ', i)        
@@ -62,7 +64,7 @@ def std_scaler(df):
     return (df - df.mean()) / df.std()
 
 
-def train(df, epochs=1000, learning_rate=0.1, precision=0.00000001, method='GD', seed=42):
+def train(df, epochs, learning_rate, precision, method, seed, batch_size):
     if df is None:
         return None
     houses = {
@@ -78,13 +80,15 @@ def train(df, epochs=1000, learning_rate=0.1, precision=0.00000001, method='GD',
     df = df.replace(np.nan, 0)
     df = std_scaler(df)
     for i, val in enumerate(houses):
+        print("Training the classifier for class k = {}...".format(val))
         y = []
         for house in houses_indexes:
             y.append(1 if house == i else 0)
-        theta, history = gradient_descent(df, np.asarray(y), epochs, learning_rate, precision, method, seed)
+        theta, history = gradient_descent(df, np.asarray(y), epochs, learning_rate, precision, method, seed, batch_size)
         history_dct[val] = history
         thetas.append(theta)
     thetas = pd.DataFrame(thetas, columns=df.columns, index=houses)
+    print("Training is completed!")
     return thetas
 
 
@@ -93,7 +97,7 @@ def main():
     if os.path.exists(args['input']):
         try:
             df = pd.read_csv(args['input'])
-            thetas = train(df, args['epochs'], args['learning_rate'], args['precision'], args['method'])
+            thetas = train(df, args['epochs'], args['learning_rate'], args['precision'], args['method'], args['seed'], args['batch_size'])
             if thetas is not None:
                 thetas.to_csv(args['output'])
         except OSError as e:
