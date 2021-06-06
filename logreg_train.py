@@ -12,6 +12,8 @@ def parse_args():
     # parser.add_argument('-r', '--r_squared', type=int, help='show R2 metric', default=False)
     parser.add_argument('-l', '--learning_rate', type=float, help='set learning rate', default=0.1)
     parser.add_argument('-e', '--epochs', type=float, help='set epoch number', default=1000)
+    parser.add_argument('-p', '--precision', type=float, help='set precision', default=0.00000001)
+    parser.add_argument('-m', '--method', type=str, help='set method', default='GD')
     args = parser.parse_args()
     return args.__dict__
 
@@ -28,13 +30,31 @@ def get_cost(df, theta, y):
     return derivative, cost
 
 
-def gradient_descent(df, y, epochs, learning_rate):
+def gradient_descent(df, y, epochs, learning_rate, precision, method='GD', seed=42, batch_size=50):
+    if method != 'GD':
+        np.random.seed(seed)
     history = []
     theta = np.zeros((1, df.shape[1]))
-    for _ in range(epochs):
-        derivative, cost = get_cost(df, theta, y)
+    cost_prev = 0
+    cost = 1
+    i = 0
+    while abs(cost - cost_prev) > precision and i < epochs:
+        cost_prev = cost
+        if method == 'SGD':
+            random_ind = np.random.randint(df.shape[0])
+            derivative, cost = get_cost(df.iloc[[random_ind, ]], theta, y[random_ind])
+        if method == 'MBGD':
+            batch = np.random.randint(0, df.shape[0], batch_size)
+            derivative, cost = get_cost(df.iloc[batch], theta, y[batch])
+        else:
+            derivative, cost = get_cost(df, theta, y)
         theta -= learning_rate * derivative
         history.append(cost)
+        i += 1
+    if abs(cost - cost_prev)> precision:
+           print('Error: Calculation stopped, maximum number of epochs exceeded.')
+    else:           
+        print('epochs = ', i)        
     return theta[0].tolist(), history
 
 
@@ -42,7 +62,7 @@ def std_scaler(df):
     return (df - df.mean()) / df.std()
 
 
-def train(df, epochs=1000, learning_rate=0.1):
+def train(df, epochs=1000, learning_rate=0.1, precision=0.00000001, method='GD', seed=42):
     if df is None:
         return None
     houses = {
@@ -61,7 +81,7 @@ def train(df, epochs=1000, learning_rate=0.1):
         y = []
         for house in houses_indexes:
             y.append(1 if house == i else 0)
-        theta, history = gradient_descent(df, np.asarray(y), epochs, learning_rate)
+        theta, history = gradient_descent(df, np.asarray(y), epochs, learning_rate, precision, method, seed)
         history_dct[val] = history
         thetas.append(theta)
     thetas = pd.DataFrame(thetas, columns=df.columns, index=houses)
@@ -73,7 +93,7 @@ def main():
     if os.path.exists(args['input']):
         try:
             df = pd.read_csv(args['input'])
-            thetas = train(df, args['epochs'], args['learning_rate'])
+            thetas = train(df, args['epochs'], args['learning_rate'], args['precision'], args['method'])
             if thetas is not None:
                 thetas.to_csv(args['output'])
         except OSError as e:
