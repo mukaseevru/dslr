@@ -9,7 +9,7 @@ def parse_args():
     parser.add_argument('-d', '--data', type=str, help='path to data.csv', default='data/dataset_test.csv')
     parser.add_argument('-t', '--thetas', type=str, help='path to thetas.csv', default='data/thetas.csv')
     parser.add_argument('-o', '--output', type=str, help='path to houses.csv', default='data/houses.csv')
-    # parser.add_argument('-s', '--show', type=int, help='show steps', default=False)
+    parser.add_argument('-s', '--show', type=int, help='show predict result', default=0)
     args = parser.parse_args()
     return args.__dict__
 
@@ -49,6 +49,8 @@ def main():
                 thetas = pd.read_csv(args['thetas'])
                 y_pred = predict(df, thetas)
                 if y_pred is not None:
+                    if args['show']:
+                        print(y_pred)
                     y_pred.index.name = 'Index'
                     y_pred.to_csv(args['output'])
             except OSError as e:
