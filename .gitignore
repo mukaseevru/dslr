@@ -135,3 +135,6 @@ dmypy.json
 plots
 data/houses.csv
 data/thetas.csv
+
+# Others
+.DS_Store
