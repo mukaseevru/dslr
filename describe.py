@@ -66,7 +66,7 @@ def describe_percent(lst, percent):
 def describe(df):
     df = df.select_dtypes(include=['int64', 'float64'])
     table = pd.DataFrame(columns=df.columns,
-                         index=['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'])
+                         index=['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max', 'var_b'])
     for column in df.columns:
         table.loc['count', column] = describe_count(df[column].values)
         table.loc['mean', column] = describe_mean(df[column].values)
@@ -76,6 +76,7 @@ def describe(df):
         table.loc['50%', column] = describe_percent(df[column].values, 0.5)
         table.loc['75%', column] = describe_percent(df[column].values, 0.75)
         table.loc['max', column] = describe_max(df[column].values)
+        table.loc['var_b', column] = describe_std(df[column].values) ** 2
         table[column] = table[column].astype('float64')
     return table
 
